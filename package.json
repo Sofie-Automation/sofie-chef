@@ -5,14 +5,14 @@
 	"author": {
 		"name": "NRK"
 	},
-	"main": "dist/main.js",
+	"main": "dist/src/main.js",
 	"scripts": {
 		"build": "tsc",
 		"watch:build": "tsc -w",
 		"watch:electron": "nodemon --exec npm start",
 		"lint": "run -T g:eslint . --ext .js,.jsx,.ts,.tsx",
 		"test": "jest",
-		"start": "electron ./dist/main.js",
+		"start": "electron ./dist/src/main.js",
 		"build:binary": "electron-builder",
 		"dev": "yarn && yarn build && concurrently --kill-others \"yarn watch:build\" \"yarn watch:electron\"",
 		"release:release": "sofie-version",

@@ -17,6 +17,7 @@ import {
 } from '../lib/api'
 import { rateLimitAndDoLater } from '../lib/lib'
 import { Config } from '../lib/config'
+import packageJson = require('../../package.json')
 
 // How long to wait for status changes to settle before broadcasting
 const STATUS_SETTLE_TIME = 3000
@@ -34,7 +35,7 @@ export class APIHelper {
 
 	private config: Config | undefined = undefined
 
-	private status: SendWSMessageStatus['status'] = {
+	private _status: InternalStatus = {
 		app: {
 			statusCode: StatusCode.GOOD,
 			message: '',
@@ -55,12 +56,17 @@ export class APIHelper {
 		this.setupHTTPServer()
 		this.setupWSServer()
 	}
-	public setStatus(status: SendWSMessageStatus['status']): void {
-		this.status = status
+	public setStatus(status: InternalStatus): void {
+		this._status = status
 
 		this.broadcastStatusToClients()
 	}
-
+	get status(): SendWSMessageStatus['status'] {
+		return {
+			...this._status,
+			version: packageJson.version,
+		}
+	}
 	private setupHTTPServer(): void {
 		if (this.httpServer) return
 		if (!this.config) throw new Error('this.config not set, call init() first!')
@@ -481,3 +487,5 @@ function firstInArray<T>(v: T | T[]): T {
 	if (Array.isArray(v)) return v[0]
 	else return v
 }
+
+type InternalStatus = Omit<SendWSMessageStatus['status'], 'version'>

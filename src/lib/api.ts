@@ -100,6 +100,7 @@ export interface SendWSMessageStatus extends SendWSMessageBase {
 	type: SendWSMessageType.STATUS
 
 	status: {
+		version: string
 		app: StatusObject
 		windows: {
 			[index: string]: StatusObject
