@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
 
+## [0.4.3](https://github.com/Sofie-Automation/sofie-chef/compare/v0.4.2...v0.4.3) (Wed Oct 22 2025)
+
+
+### Fixes
+
+* send status to connected clients once every minute [b5ba850](https://github.com/Sofie-Automation/sofie-chef/commit/b5ba850f4381dd8a08a8504645b7f5d7b918c0cf)
+
 ## [0.4.2](https://github.com/nrkno/sofie-chef/compare/v0.4.2...v0.4.2) (Mon May 19 2025)
 
 
