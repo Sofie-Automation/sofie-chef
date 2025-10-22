@@ -25,7 +25,11 @@ export class APIHelper {
 	private httpServer: Koa | undefined
 	private wsServer: WebSocketServer | undefined
 
-	private connectedClients: WebSocket[] = []
+	private connectedClients: {
+		ws: WebSocket
+		connectionId: number
+		statusInterval: NodeJS.Timeout
+	}[] = []
 	private connectedId = 0
 
 	private config: Config | undefined = undefined
@@ -180,9 +184,16 @@ POST /api/execute/:windowId body: {"jsCode": "" }<br>
 
 		this.wsServer.on('connection', (ws, request) => {
 			// A client has connected!
-			this.connectedClients.push(ws)
 
 			const connectionId = this.connectedId++
+
+			this.connectedClients.push({
+				ws,
+				connectionId,
+				statusInterval: setInterval(() => {
+					this.sendStatusToClient(ws)
+				}, 60000), // Every minute
+			})
 
 			let remoteAddress = request.socket.remoteAddress || 'N/A'
 			if (request.socket.remotePort) {
@@ -232,8 +243,15 @@ POST /api/execute/:windowId body: {"jsCode": "" }<br>
 			}
 
 			ws.once('close', () => {
-				const index = this.connectedClients.indexOf(ws)
-				if (index !== -1) this.connectedClients.splice(index, 1)
+				const index = this.connectedClients.findIndex((o) => o.connectionId === connectionId)
+				if (index !== -1) {
+					const client = this.connectedClients[index]
+					clearInterval(client.statusInterval)
+
+					this.connectedClients.splice(index, 1)
+				} else {
+					this.logger.warn(`Could not find websocket client on close for connection "${connectionId}"`)
+				}
 
 				// Remove listeners:
 				ws.off('message', onMessage)
@@ -244,10 +262,7 @@ POST /api/execute/:windowId body: {"jsCode": "" }<br>
 			ws.on('message', onMessage)
 
 			// Send initial status:
-			this.sendMessage(ws, {
-				type: SendWSMessageType.STATUS,
-				status: this.status,
-			})
+			this.sendStatusToClient(ws)
 		})
 		this.logger.info(`Websocket server listening on port ${wsPort}`)
 	}
@@ -371,11 +386,8 @@ POST /api/execute/:windowId body: {"jsCode": "" }<br>
 	private broadcastStatusToClients = rateLimitAndDoLater(
 		() => {
 			// Broadcast status to all clients
-			for (const ws of this.connectedClients) {
-				this.sendMessage(ws, {
-					type: SendWSMessageType.STATUS,
-					status: this.status,
-				})
+			for (const client of this.connectedClients) {
+				this.sendStatusToClient(client.ws)
 			}
 		},
 		STATUS_SETTLE_TIME,
@@ -383,6 +395,12 @@ POST /api/execute/:windowId body: {"jsCode": "" }<br>
 			this.logger.error(err)
 		}
 	)
+	private sendStatusToClient(ws: WebSocket) {
+		this.sendMessage(ws, {
+			type: SendWSMessageType.STATUS,
+			status: this.status,
+		})
+	}
 }
 
 function firstInArray<T>(v: T | T[]): T {
