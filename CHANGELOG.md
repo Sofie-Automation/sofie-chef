@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
 
+## [0.5.0](https://github.com/Sofie-Automation/sofie-chef/compare/v0.4.3...v0.5.0) (Wed Jan 07 2026)
+
+
+### Features
+
+* update to electron 39 [ba39596](https://github.com/Sofie-Automation/sofie-chef/commit/ba3959680e343bc6376a15c9dc9c3af87fa5c2fa)
+
 ## [0.4.3](https://github.com/Sofie-Automation/sofie-chef/compare/v0.4.2...v0.4.3) (Wed Oct 22 2025)
 
 
