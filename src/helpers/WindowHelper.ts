@@ -256,23 +256,30 @@ export class WindowHelper extends EventEmitter {
 			this.config.height !== undefined &&
 			this.config.width !== undefined
 		) {
-			// Hack to make it work on Windows with multi-dpi screens
-			// Ref: https://github.com/electron/electron/pull/10972
-			const bestDisplay = screen.getDisplayMatching({
-				height: this.config.height,
-				width: this.config.width,
-				x: this.config.x,
-				y: this.config.y,
-			})
+			if (this.config.canSpanMultipleDisplays) {
+				this.window.setBounds({
+					x: this.config.x,
+					y: this.config.y,
+					width: this.config.width,
+					height: this.config.height,
+				})
+			} else {
+				// Hack to make it work on Windows with multi-dpi screens
+				// Ref: https://github.com/electron/electron/pull/10972
+				const bestDisplay = screen.getDisplayMatching({
+					height: this.config.height,
+					width: this.config.width,
+					x: this.config.x,
+					y: this.config.y,
+				})
 
-			const windowBounds = {
-				x: Math.max(this.config.x, bestDisplay.workArea.x),
-				y: Math.max(this.config.y, bestDisplay.workArea.y),
-				width: Math.min(this.config.width, bestDisplay.workArea.width),
-				height: Math.min(this.config.height, bestDisplay.workArea.height),
+				this.window.setBounds({
+					x: Math.max(this.config.x, bestDisplay.workArea.x),
+					y: Math.max(this.config.y, bestDisplay.workArea.y),
+					width: Math.min(this.config.width, bestDisplay.workArea.width),
+					height: Math.min(this.config.height, bestDisplay.workArea.height),
+				})
 			}
-
-			this.window.setBounds(windowBounds)
 		} else {
 			this.window.setBounds({
 				width: this.config.width,
