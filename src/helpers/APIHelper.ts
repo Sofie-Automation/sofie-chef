@@ -199,7 +199,7 @@ POST /api/execute/:windowId body: {"jsCode": "" }<br>
 const list = ${JSON.stringify(list)}
 list.forEach((page) => {
   const div = document.createElement('div')
-  div.innerHTML = '<a href="http://'+window.location.hostname+':${remoteDebuggingPort}/devtools/inspector.html?ws='+(page.webSocketDebuggerUrl.replace('ws://', ''))+'">'+page.title+'</a>'
+  div.innerHTML = '<a href="http://'+window.location.hostname+':${remoteDebuggingPort}/devtools/inspector.html?ws='+(page.webSocketDebuggerUrl.replace('ws://', ''))+'">'+page.title+' '+page.url+'</a>'
   document.body.appendChild(div)
 })
 </script>
