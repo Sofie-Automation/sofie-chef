@@ -158,40 +158,46 @@ POST /api/execute/:windowId body: {"jsCode": "" }<br>
 `
 		})
 
-
 		router.get('/debug/remote-debug', async (ctx) => {
-
 			// Expose a simple page that lists the open remote debugging targets and link to them
 
-			let remoteDebuggingPort: string | undefined = undefined
+			let remoteDebuggingPort: number | undefined = undefined
 			for (const arg of process.argv) {
 				if (arg.startsWith('--remote-debugging-port=')) {
 					const words = arg.split('=')
 					if (words.length === 2) {
-						remoteDebuggingPort = words[1]
+						remoteDebuggingPort = parseInt(words[1], 10)
 						break
 					}
 				}
 			}
-			if (!remoteDebuggingPort) {
+			if (!remoteDebuggingPort || isNaN(remoteDebuggingPort)) {
 				ctx.response.status = 500
-				ctx.body = 'Remote debugging not enabled. To enable, start Chef with --remote-debugging-port=PORT'
+				ctx.body =
+					'Remote debugging not enabled. To enable, start Chef with CLI arguments: --remote-debugging-port=PORT --remote-allow-origins=*'
 				return
 			}
 			try {
+				const abortController = new AbortController()
+				const timeout = setTimeout(() => abortController.abort(), 3000)
 
-				const list: {
-						description: string,
-						devtoolsFrontendUrl: string,
-						id: string,
-						title: string,
-						type: string,
-						url: string,
+				try {
+					const list: {
+						description: string
+						devtoolsFrontendUrl: string
+						id: string
+						title: string
+						type: string
+						url: string
 						webSocketDebuggerUrl: string
-				}[] = (await (await fetch(`http://localhost:${remoteDebuggingPort}/json/list`)).json()) as any
+					}[] = (await (
+						await fetch(`http://localhost:${remoteDebuggingPort}/json/list`, {
+							signal: abortController.signal,
+						})
+					).json()) as any
 
-				ctx.response.status = 200
-				ctx.body = `
+					ctx.response.status = 200
+					ctx.body = `
 <html>
 <body>
 <div>Available remote debugging pages:</div>
@@ -199,14 +205,25 @@ POST /api/execute/:windowId body: {"jsCode": "" }<br>
 const list = ${JSON.stringify(list)}
 list.forEach((page) => {
   const div = document.createElement('div')
-  div.innerHTML = '<a href="http://'+window.location.hostname+':${remoteDebuggingPort}/devtools/inspector.html?ws='+(page.webSocketDebuggerUrl.replace('ws://', ''))+'">'+page.title+' '+page.url+'</a>'
+  const a = document.createElement('a')
+  a.href =
+    'http://' +
+    window.location.hostname +
+    ':${remoteDebuggingPort}/devtools/inspector.html?ws=' +
+    page.webSocketDebuggerUrl.replace('ws://', '')
+  a.textContent = page.title + ' ' + page.url
+  div.appendChild(a)
   document.body.appendChild(div)
 })
 </script>
 </body>
 </html>
 `
-			} catch(e) {
+					clearTimeout(timeout)
+				} finally {
+					clearTimeout(timeout)
+				}
+			} catch (e) {
 				this.logger.error(`Error connecting to remote debugging port ${remoteDebuggingPort}: ${e}`)
 
 				ctx.response.status = 500
