@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
 
+## [0.6.0](https://github.com/Sofie-Automation/sofie-chef/compare/v0.5.0...v0.6.0) (Thu Mar 05 2026)
+
+
+### Fixes
+
+* improve debug link [a62db0b](https://github.com/Sofie-Automation/sofie-chef/commit/a62db0b1feea009b70791c0dc5acf9b433e154b0)
+* update Electron version to latest [7644a91](https://github.com/Sofie-Automation/sofie-chef/commit/7644a91f9a2ce602f5bf8b492fd40732e245d784)
+
+### Features
+
+* add remote-debugging page [44dacec](https://github.com/Sofie-Automation/sofie-chef/commit/44dacec775934417149480cdb88947911a88032b)
+* add option for when a window can span multipledisplays. [4b0ceac](https://github.com/Sofie-Automation/sofie-chef/commit/4b0ceac876d7f8051a98031f6862275353392f6c)
+
 ## [0.5.0](https://github.com/Sofie-Automation/sofie-chef/compare/v0.4.3...v0.5.0) (Wed Jan 07 2026)
 
 
