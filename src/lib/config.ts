@@ -22,6 +22,9 @@ export interface ConfigWindow {
 	/** Height of the window */
 	height: number
 
+	/** Set this to true to avoid Chef ensuring that a window is clamped to within a single display */
+	canSpanMultipleDisplays: boolean
+
 	disable: boolean
 
 	/** Set to true to make the window fullscreen */
@@ -68,6 +71,7 @@ export const DEFAULT_CONFIG: Config = {
 			y: undefined,
 			width: 1280,
 			height: 720,
+			canSpanMultipleDisplays: false,
 			fullScreen: false,
 			onTop: false,
 			frameless: false,

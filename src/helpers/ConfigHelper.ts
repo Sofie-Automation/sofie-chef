@@ -130,6 +130,7 @@ export class ConfigHelper extends EventEmitter {
 
 		for (const window of Object.values<ConfigWindow>(config.windows)) {
 			if (window.disable === undefined) window.disable = false
+			if (window.canSpanMultipleDisplays === undefined) window.canSpanMultipleDisplays = false
 		}
 	}
 	/** Returns the path of the folder where we store the config file. */

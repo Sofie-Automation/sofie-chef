@@ -158,6 +158,80 @@ POST /api/execute/:windowId body: {"jsCode": "" }<br>
 `
 		})
 
+		router.get('/debug/remote-debug', async (ctx) => {
+			// Expose a simple page that lists the open remote debugging targets and link to them
+
+			let remoteDebuggingPort: number | undefined = undefined
+			for (const arg of process.argv) {
+				if (arg.startsWith('--remote-debugging-port=')) {
+					const words = arg.split('=')
+					if (words.length === 2) {
+						remoteDebuggingPort = parseInt(words[1], 10)
+						break
+					}
+				}
+			}
+			if (!remoteDebuggingPort || isNaN(remoteDebuggingPort)) {
+				ctx.response.status = 500
+				ctx.body =
+					'Remote debugging not enabled. To enable, start Chef with CLI arguments: --remote-debugging-port=PORT --remote-allow-origins=*'
+				return
+			}
+			try {
+				const abortController = new AbortController()
+				const timeout = setTimeout(() => abortController.abort(), 3000)
+
+				try {
+					const list: {
+						description: string
+						devtoolsFrontendUrl: string
+						id: string
+						title: string
+						type: string
+						url: string
+						webSocketDebuggerUrl: string
+					}[] = (await (
+						await fetch(`http://localhost:${remoteDebuggingPort}/json/list`, {
+							signal: abortController.signal,
+						})
+					).json()) as any
+
+					ctx.response.status = 200
+					ctx.body = `
+<html>
+<body>
+<div>Available remote debugging pages:</div>
+<script>
+const list = ${JSON.stringify(list)}
+list.forEach((page) => {
+  const div = document.createElement('div')
+  const a = document.createElement('a')
+  a.href =
+    'http://' +
+    window.location.hostname +
+    ':${remoteDebuggingPort}/devtools/inspector.html?ws=' +
+    page.webSocketDebuggerUrl.replace('ws://', '')
+  a.textContent = page.title + ' ' + page.url
+  div.appendChild(a)
+  document.body.appendChild(div)
+})
+</script>
+</body>
+</html>
+`
+					clearTimeout(timeout)
+				} finally {
+					clearTimeout(timeout)
+				}
+			} catch (e) {
+				this.logger.error(`Error connecting to remote debugging port ${remoteDebuggingPort}: ${e}`)
+
+				ctx.response.status = 500
+				ctx.body = `Error connecting to remote debugging port ${remoteDebuggingPort}: ${e}`
+				return
+			}
+		})
+
 		this.httpServer.use(router.routes()).use(router.allowedMethods())
 
 		this.httpServer.use((ctx) => {
