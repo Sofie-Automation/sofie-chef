@@ -1,6 +1,6 @@
 import { BrowserWindow, screen } from 'electron'
 import { EventEmitter } from 'events'
-import { ConfigWindow, ConfigWindowShared } from '../lib/config'
+import { ConfigWindow, ConfigWindowAllowedWebHIDDevice, ConfigWindowShared } from '../lib/config'
 import _ = require('underscore')
 import { Logger } from '../lib/logging'
 import { ReportStatusIpcPayload, StatusCode, StatusObject } from '../lib/api'
@@ -98,6 +98,40 @@ export class WindowHelper extends EventEmitter {
 	}
 	public get config(): ConfigWindow {
 		return this._config
+	}
+	public hasAllowedWebHIDDevices(): boolean {
+		return (this._config.allowedWebHIDDevices?.length ?? 0) > 0
+	}
+	public isWebContents(webContents: Electron.WebContents): boolean {
+		return this.window.webContents === webContents
+	}
+	public isMainFrame(frame: Electron.WebFrameMain | null): boolean {
+		if (!frame) return false
+
+		const mainFrame = this.window.webContents.mainFrame
+		return mainFrame.processId === frame.processId && mainFrame.routingId === frame.routingId
+	}
+	public isOrigin(origin: string): boolean {
+		const currentUrl = this.window.webContents.getURL()
+		if (!currentUrl) return false
+
+		try {
+			return new URL(currentUrl).origin === origin
+		} catch {
+			return false
+		}
+	}
+	public isAllowedWebHIDDevice(device: Electron.HIDDevice): boolean {
+		const allowedDevices = this._config.allowedWebHIDDevices ?? []
+
+		for (const allowedDevice of allowedDevices) {
+			if (!this._matchesVendorAndProduct(device, allowedDevice)) continue
+			if (!this._matchesUsageFilter(device, allowedDevice)) continue
+
+			return true
+		}
+
+		return false
 	}
 	public get url(): string | null {
 		return this._url
@@ -429,5 +463,24 @@ function setupUpdateCSS() {
 	})
 }
 setupUpdateCSS();`)
+	}
+	private _matchesVendorAndProduct(
+		device: Electron.HIDDevice,
+		allowedDevice: ConfigWindowAllowedWebHIDDevice
+	): boolean {
+		return device.vendorId === allowedDevice.vendorId && device.productId === allowedDevice.productId
+	}
+	private _matchesUsageFilter(device: Electron.HIDDevice, allowedDevice: ConfigWindowAllowedWebHIDDevice): boolean {
+		const hasUsagePageFilter = allowedDevice.usagePage !== undefined
+		const hasUsageFilter = allowedDevice.usage !== undefined
+
+		if (!hasUsagePageFilter && !hasUsageFilter) return true
+
+		return device.collections.some((collection) => {
+			const usagePageMatches = !hasUsagePageFilter || collection.usagePage === allowedDevice.usagePage
+			const usageMatches = !hasUsageFilter || collection.usage === allowedDevice.usage
+
+			return usagePageMatches && usageMatches
+		})
 	}
 }

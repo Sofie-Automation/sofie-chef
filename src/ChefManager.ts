@@ -1,4 +1,4 @@
-import { App, globalShortcut, dialog } from 'electron'
+import { App, globalShortcut, dialog, session } from 'electron'
 import { Logger } from './lib/logging'
 import { ConfigHelper } from './helpers/ConfigHelper'
 import { AllWindowsManager } from './helpers/AllWindowsManager'
@@ -40,6 +40,8 @@ export class ChefManager {
 
 	public onAppReady(): void {
 		this.logger.info('Initializing...')
+
+		this.setupWebHIDPermissions()
 
 		this.windowsHelper.initialize()
 
@@ -97,6 +99,62 @@ export class ChefManager {
 					})
 					.catch((e) => this.logger.error(e))
 			}
+		})
+	}
+
+	private setupWebHIDPermissions() {
+		const defaultSession = session.defaultSession
+
+		defaultSession.setPermissionCheckHandler((webContents, permission) => {
+			if (permission !== 'hid') return false
+			if (!webContents) return false
+
+			const window = this.windowsHelper.getWindowForWebContents(webContents)
+			return window?.hasAllowedWebHIDDevices() ?? false
+		})
+
+		defaultSession.setDevicePermissionHandler((details) => {
+			if (details.deviceType !== 'hid') return false
+
+			const window = this.windowsHelper.getWindowForOrigin(details.origin)
+			if (!window) return false
+
+			const device = details.device as Electron.HIDDevice
+			const allowed = window.isAllowedWebHIDDevice(device)
+
+			if (allowed) {
+				this.logger.info(
+					`Window "${window.id}": auto-approved WebHID device ${device.vendorId}:${device.productId} (${device.deviceId})`
+				)
+			} else {
+				this.logger.info(
+					`Window "${window.id}": denied WebHID device ${device.vendorId}:${device.productId} (${device.deviceId})`
+				)
+			}
+
+			return allowed
+		})
+
+		defaultSession.on('select-hid-device', (event, details, callback) => {
+			event.preventDefault()
+
+			const window = this.windowsHelper.getWindowForFrame(details.frame)
+			if (!window || !window.hasAllowedWebHIDDevices()) {
+				callback('')
+				return
+			}
+
+			const device = details.deviceList.find((entry) => window.isAllowedWebHIDDevice(entry))
+			if (!device) {
+				this.logger.info(`Window "${window.id}": no matching WebHID device in chooser, denying request`)
+				callback('')
+				return
+			}
+
+			this.logger.info(
+				`Window "${window.id}": selected WebHID device ${device.vendorId}:${device.productId} (${device.deviceId})`
+			)
+			callback(device.deviceId)
 		})
 	}
 }
