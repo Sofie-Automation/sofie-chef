@@ -106,7 +106,10 @@ export class ChefManager {
 		const defaultSession = session.defaultSession
 
 		defaultSession.setPermissionCheckHandler((webContents, permission) => {
-			if (permission !== 'hid') return false
+			if (permission !== 'hid') {
+				// Match Electron's default permission-check behavior when no custom handler is set.
+				return permission !== 'deprecated-sync-clipboard-read'
+			}
 			if (!webContents) return false
 
 			const window = this.windowsHelper.getWindowForWebContents(webContents)
