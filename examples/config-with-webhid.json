@@ -1,0 +1,35 @@
+{
+	"freeze": false,
+	"apiPort": 5270,
+	"apiKey": "",
+	"windows": {
+		"main": {
+			"disable": false,
+			"x": 100,
+			"y": 100,
+			"width": 1920,
+			"height": 1080,
+			"fullScreen": false,
+			"onTop": false,
+			"frameless": false,
+			"displayDebug": false,
+			"defaultURL": "https://example.com/hid-test",
+			"defaultColor": "#000000",
+			"hideCursor": true,
+			"hideScrollbar": false,
+			"zoomFactor": 100,
+			"allowedWebHIDDevices": [
+				{
+					"vendorId": 1133,
+					"productId": 49824,
+					"usagePage": 1,
+					"usage": 6
+				},
+				{
+					"vendorId": 1452,
+					"productId": 613
+				}
+			]
+		}
+	}
+}

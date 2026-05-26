@@ -23,6 +23,7 @@ export class AllWindowsManager extends EventEmitter {
 			this.getAllWindows().forEach((w) => w.window.receiveExternalStatus(browserWindow, payload))
 		})
 	}
+
 	static GetAllWindowsManager(logger: Logger): AllWindowsManager {
 		// return singleton
 		this._singletonInstance = this._singletonInstance ?? new AllWindowsManager(logger)
@@ -36,12 +37,30 @@ export class AllWindowsManager extends EventEmitter {
 	public getWindow(id: string): WindowHelper | undefined {
 		return this.windowsHandlers[id]
 	}
+
 	public getAllWindows(): { id: string; window: WindowHelper }[] {
 		return Object.entries<WindowHelper>(this.windowsHandlers).map(([id, window]) => ({ id, window }))
 	}
+
 	public getLastFocusedWindow(): WindowHelper | undefined {
 		return this.lastFocusedWindow
 	}
+
+	public getWindowForWebContents(webContents: Electron.WebContents): WindowHelper | undefined {
+		return Object.values<WindowHelper>(this.windowsHandlers).find((window) => window.isWebContents(webContents))
+	}
+
+	public getWindowForFrame(frame: Electron.WebFrameMain | null): WindowHelper | undefined {
+		if (!frame) return undefined
+
+		const mainFrame = frame.top ?? frame
+		return Object.values<WindowHelper>(this.windowsHandlers).find((window) => window.isMainFrame(mainFrame))
+	}
+
+	public getWindowForOrigin(origin: string): WindowHelper | undefined {
+		return Object.values<WindowHelper>(this.windowsHandlers).find((window) => window.isOrigin(origin))
+	}
+
 	public getStatus(): { [index: string]: StatusObject } {
 		const status: { [index: string]: StatusObject } = {}
 

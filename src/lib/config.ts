@@ -12,6 +12,16 @@ export interface Config extends ConfigWindowShared {
 	/** A list of the windows to be created */
 	windows: { [id: string]: ConfigWindow }
 }
+export interface ConfigWindowAllowedWebHIDDevice {
+	/** The USB vendor ID. */
+	vendorId: number
+	/** The USB product ID. */
+	productId: number
+	/** Optional HID usage page filter. */
+	usagePage?: number
+	/** Optional HID usage filter. */
+	usage?: number
+}
 export interface ConfigWindow {
 	/** X-position of the window */
 	x: number | undefined
@@ -58,6 +68,9 @@ export interface ConfigWindow {
 
 	/** Zoom factor of the content. Default is 100 (%) */
 	zoomFactor?: number
+
+	/** A list of WebHID devices that are allowed and automatically approved for this window. */
+	allowedWebHIDDevices?: ConfigWindowAllowedWebHIDDevice[]
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -81,6 +94,7 @@ export const DEFAULT_CONFIG: Config = {
 			hideCursor: true,
 			hideScrollbar: false,
 			zoomFactor: 100,
+			allowedWebHIDDevices: [],
 		},
 	},
 }

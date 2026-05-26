@@ -40,6 +40,12 @@ Most properties of the `config.json`-file are also automatically updated when mo
 
 See [config.ts](src/lib/config.ts)
 
+### WebHID Auto-Approval
+
+To configure per-window WebHID device allowlists, see [docs/WebHID-Configuration.md](docs/WebHID-Configuration.md).
+
+An example config is available at [examples/config-with-webhid.json](examples/config-with-webhid.json).
+
 ## Tips for Running in Fullscreen Mode
 
 Here are some tips for when you want to display something in fullscreen and want to avoid
