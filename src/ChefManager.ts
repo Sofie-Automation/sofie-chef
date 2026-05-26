@@ -119,23 +119,23 @@ export class ChefManager {
 		defaultSession.setDevicePermissionHandler((details) => {
 			if (details.deviceType !== 'hid') return false
 
-			const window = this.windowsHelper.getWindowForOrigin(details.origin)
-			if (!window) return false
-
 			const device = details.device as Electron.HIDDevice
-			const allowed = window.isAllowedWebHIDDevice(device)
+			const windows = this.windowsHelper.getWindowsForOrigin(details.origin)
+			const matchingWindow = windows.find((w) => w.isAllowedWebHIDDevice(device))
 
-			if (allowed) {
+			if (matchingWindow) {
 				this.logger.info(
-					`Window "${window.id}": auto-approved WebHID device ${device.vendorId}:${device.productId} (${device.deviceId})`
+					`Origin "${details.origin}": auto-approved WebHID device ${device.vendorId}:${device.productId} (${device.deviceId}) (matched config for window "${matchingWindow.id}")`
 				)
-			} else {
-				this.logger.info(
-					`Window "${window.id}": denied WebHID device ${device.vendorId}:${device.productId} (${device.deviceId})`
-				)
+				return true
 			}
 
-			return allowed
+			if (windows.length > 0) {
+				this.logger.info(
+					`Origin "${details.origin}": denied WebHID device ${device.vendorId}:${device.productId} (${device.deviceId})`
+				)
+			}
+			return false
 		})
 
 		defaultSession.on('select-hid-device', (event, details, callback) => {

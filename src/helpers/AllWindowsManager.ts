@@ -57,8 +57,8 @@ export class AllWindowsManager extends EventEmitter {
 		return Object.values<WindowHelper>(this.windowsHandlers).find((window) => window.isMainFrame(mainFrame))
 	}
 
-	public getWindowForOrigin(origin: string): WindowHelper | undefined {
-		return Object.values<WindowHelper>(this.windowsHandlers).find((window) => window.isOrigin(origin))
+	public getWindowsForOrigin(origin: string): WindowHelper[] {
+		return Object.values<WindowHelper>(this.windowsHandlers).filter((window) => window.isOrigin(origin))
 	}
 
 	public getStatus(): { [index: string]: StatusObject } {
