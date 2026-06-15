@@ -83,7 +83,9 @@ navigator.hid.getDevices().then((devices) => {
 
 3. **Scope**: Device approval is per-window. Each window can have its own allowed device list.
 
-4. **Logging**: Chef will log when devices are auto-approved or denied, making it easier to debug configuration issues.
+4. **Multiple windows sharing an origin**: If multiple windows load pages from the same URL origin (e.g. `https://example.com`), a device will be auto-approved as long as it is listed in `allowedWebHIDDevices` for _any_ of those windows — not necessarily the one actually using it.
+
+5. **Logging**: Chef will log when devices are auto-approved or denied, making it easier to debug configuration issues.
 
 ### Troubleshooting
 
