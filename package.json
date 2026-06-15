@@ -94,6 +94,9 @@
 		"snap": {
 			"publish": "github"
 		},
+		"directories": {
+			"output": "release"
+		},
 		"files": [
 			"dist/**/*",
 			"static/**/*"
