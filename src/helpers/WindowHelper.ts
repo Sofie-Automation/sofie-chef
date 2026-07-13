@@ -7,6 +7,7 @@ import { ReportStatusIpcPayload, StatusCode, StatusObject } from '../lib/api'
 import * as path from 'path'
 import urlJoin = require('url-join')
 import { Queue } from '../lib/queue'
+import { CrashRecovery } from '../lib/crashRecovery'
 
 export class WindowHelper extends EventEmitter {
 	private window: BrowserWindow
@@ -29,6 +30,16 @@ export class WindowHelper extends EventEmitter {
 	private updateHash = 0
 
 	private queue = new Queue()
+
+	/** Last known OS process id of the renderer process */
+	private rendererPid: number | undefined = undefined
+	private crashRecovery = new CrashRecovery({
+		restart: async () => this.restart(),
+		onRestartScheduled: (delay: number, crashCount: number) =>
+			this.logger.warn(`Window "${this.id}": restarting renderer in ${delay} ms (crash #${crashCount})`),
+		onRestartFailed: (error: unknown) =>
+			this.logger.error(`Window "${this.id}": error when restarting after crash: ${error}`),
+	})
 
 	constructor(
 		private logger: Logger,
@@ -94,6 +105,8 @@ export class WindowHelper extends EventEmitter {
 			this.logger.warn(`Window "${this.id}": responsive`)
 		})
 
+		this._setupWebContentListeners()
+
 		this.logger.info(`Creating new window "${this.id}"`)
 	}
 	public get config(): ConfigWindow {
@@ -150,6 +163,7 @@ export class WindowHelper extends EventEmitter {
 	public async close(): Promise<void> {
 		// Note: This Method runs in a queue!
 		this.logger.info(`Closing window "${this.id}"`)
+		this.crashRecovery.cancelPending()
 		this.window.close()
 	}
 	public async updateConfig(sharedConfig: ConfigWindowShared, config: ConfigWindow): Promise<void> {
@@ -235,6 +249,9 @@ export class WindowHelper extends EventEmitter {
 	}
 	/** Restarts (reloads) the window */
 	private async _restart(): Promise<void> {
+		// Any restart supersedes a pending automatic restart-after-crash:
+		this.crashRecovery.cancelPending()
+
 		delete this._contentStatus
 		const updateHash = ++this.updateHash
 
@@ -247,14 +264,14 @@ export class WindowHelper extends EventEmitter {
 			})
 			if (updateHash !== this.updateHash) return // Abort if the updateHash has changed
 
-			this.logger.info(`Window "${this.id}": Loaded url "${url}"`)
+			this.rendererPid = this.window.webContents.getOSProcessId()
+			this.crashRecovery.notifyLoaded()
+			this.logger.info(`Window "${this.id}": Loaded url "${url}" (renderer pid: ${this.rendererPid})`)
 			const defaultColor = this.config.defaultColor ?? '#000000' // ie: an empty string = don't set any color
 			if (defaultColor) {
 				// Set the background color, to avoid white flashes when loading:
 				await this.window.webContents.insertCSS(`html, body { background-color: ${defaultColor}; }`)
 			}
-
-			this._setupWebContentListeners()
 
 			this.window.setTitle(this.title)
 			this.window.webContents.setZoomFactor((this.config.zoomFactor ?? 100) / 100)
@@ -362,19 +379,23 @@ export class WindowHelper extends EventEmitter {
 	}
 
 	private _setupWebContentListeners() {
-		this.window.webContents.off('render-process-gone', this._handleRenderProcessGone)
 		this.window.webContents.on('render-process-gone', this._handleRenderProcessGone)
-
-		this.window.webContents.off('console-message', this._handleConsoleMessage)
 		this.window.webContents.on('console-message', this._handleConsoleMessage)
 	}
-	private _handleRenderProcessGone = (event: Electron.Event, details: Electron.RenderProcessGoneDetails): void => {
-		if (details.reason !== 'clean-exit') {
-			this.status = {
-				statusCode: StatusCode.ERROR,
-				message: `Renderer process gone "${this._url}": ${details.reason}, ${details.exitCode}, "${event}"`,
-			}
+	private _handleRenderProcessGone = (_event: Electron.Event, details: Electron.RenderProcessGoneDetails): void => {
+		if (details.reason === 'clean-exit') return
+
+		this.logger.error(
+			`Window "${this.id}": renderer process gone (reason: ${details.reason}, exitCode: ${
+				details.exitCode
+			}, pid: ${this.rendererPid}, url: "${this.getURL()}")`
+		)
+		this.status = {
+			statusCode: StatusCode.ERROR,
+			message: `Renderer process gone: ${details.reason} (exitCode: ${details.exitCode})`,
 		}
+
+		this.crashRecovery.notifyCrash()
 	}
 	private _handleConsoleMessage = (
 		_event: Electron.Event,
