@@ -29,7 +29,7 @@
 	],
 	"license": "MIT",
 	"engines": {
-		"node": ">=22"
+		"node": ">=24"
 	},
 	"devDependencies": {
 		"@sofie-automation/code-standard-preset": "~2.5",
@@ -38,7 +38,7 @@
 		"@types/koa-bodyparser": "^4.3.10",
 		"@types/koa-router": "^7.4.5",
 		"@types/koa__cors": "^4.0.3",
-		"@types/node": "22.15.19",
+		"@types/node": "24.19.0",
 		"@types/underscore": "^1.11.9",
 		"@types/url-join": "^4.0.1",
 		"@types/ws": "^8.5.6",
