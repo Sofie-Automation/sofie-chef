@@ -6,12 +6,16 @@ on:
       - 'v*.*.*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
+      tag_name: ${{ steps.release_info.outputs.tag_name }}
     steps:
       - name: Determine release info
         id: release_info
@@ -27,8 +31,8 @@ jobs:
         name: Create Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
+          tag_name: ${{ steps.release_info.outputs.tag_name }}
+          name: Release ${{ steps.release_info.outputs.tag_name }}
           prerelease: ${{ steps.release_info.outputs.prerelease }}
           draft: true
 
@@ -57,9 +61,16 @@ jobs:
           yarn build
       - name: Build Binary
         run: |
-          yarn build:binary
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          yarn build:binary --publish never
+      - name: Upload Windows binaries to release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.create-release.outputs.tag_name }}
+          draft: true
+          files: |
+            release/*.exe
+            release/*.exe.blockmap
+            release/latest*.yml
           # CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           # CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
   build-linux-binaries:
@@ -89,9 +100,20 @@ jobs:
           yarn build
       - name: Build Binary
         run: |
-          yarn build:binary
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          yarn build:binary --publish never
+      - name: Upload Linux binaries to release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.create-release.outputs.tag_name }}
+          draft: true
+          files: |
+            release/*.AppImage
+            release/*.snap
+            release/*.deb
+            release/*.rpm
+            release/*.tar.gz
+            release/*.blockmap
+            release/latest*.yml
   # build-macos-binaries:
   #   name: Build MacOS Binaries
   #   runs-on: macos-latest
