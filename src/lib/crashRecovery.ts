@@ -65,8 +65,7 @@ export class CrashRecovery {
 		this.lastCrashTime = Date.now()
 
 		const delay = Math.min(
-			(this.options.initialDelay * 2) ** (this.crashCount - 1) +
-				Math.floor(Math.random() * this.options.maxJitter),
+			this.options.initialDelay * 2 ** (this.crashCount - 1) + Math.floor(Math.random() * this.options.maxJitter),
 			this.options.maxDelay
 		)
 
