@@ -1,11 +1,11 @@
 import { BrowserWindow, screen } from 'electron'
 import { EventEmitter } from 'events'
 import { ConfigWindow, ConfigWindowAllowedWebHIDDevice, ConfigWindowShared } from '../lib/config'
-import _ = require('underscore')
+import { isEqual } from 'underscore'
 import { Logger } from '../lib/logging'
 import { ReportStatusIpcPayload, StatusCode, StatusObject } from '../lib/api'
 import * as path from 'path'
-import urlJoin = require('url-join')
+import urlJoin from 'url-join'
 import { Queue } from '../lib/queue'
 import { CrashRecovery } from '../lib/crashRecovery'
 
@@ -172,7 +172,7 @@ export class WindowHelper extends EventEmitter {
 		this._sharedConfig = sharedConfig
 		this._config = config
 
-		if (!_.isEqual(oldConfig, config)) {
+		if (!isEqual(oldConfig, config)) {
 			await this._updateWindow(oldConfig)
 		}
 	}
@@ -397,15 +397,9 @@ export class WindowHelper extends EventEmitter {
 
 		this.crashRecovery.notifyCrash()
 	}
-	private _handleConsoleMessage = (
-		_event: Electron.Event,
-		level: number,
-		message: string,
-		line: number,
-		sourceId: string
-	): void => {
+	private _handleConsoleMessage = (event: Electron.Event<Electron.WebContentsConsoleMessageEventParams>): void => {
 		if (this.config.logContent) {
-			const logMessage = `[${level}] ${message} at ${sourceId}:${line}`
+			const logMessage = `[${event.level}] ${event.message} at ${event.sourceId}:${event.lineNumber}`
 			this.logger.debug(`${this.id}: ${logMessage}`)
 		}
 	}
