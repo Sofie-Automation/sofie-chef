@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
 
+## [0.7.0](https://github.com/Sofie-Automation/sofie-chef/compare/v0.6.0...v0.7.0) (Tue Sep 29 2026)
+
+
+### Fixes
+
+* fix arithmatic operation [bbf92d5](https://github.com/Sofie-Automation/sofie-chef/commit/bbf92d5e9631baceac252fff62aea22c70a07b26)
+* add version property to API /status [7959fbd](https://github.com/Sofie-Automation/sofie-chef/commit/7959fbd3ce7f4ea353df06ecd8e6e956b1111b21)
+* auto restart crashed windows [331b86d](https://github.com/Sofie-Automation/sofie-chef/commit/331b86d8412f06c22862fb2a00fb77838311c352)
+* prevent unwanted files getting into app.asar (#33) [6b85ae0](https://github.com/Sofie-Automation/sofie-chef/commit/6b85ae0042cb7acf9f222d1e8541b01a509e7165)
+* **(EAV-499)** share allowedWebHIDDevices per origin (#34) [b9342eb](https://github.com/Sofie-Automation/sofie-chef/commit/b9342eb0a1547f13f1ca2d04b6bf812eae937fea)
+* **(EAV-499)** match electron's default permission check handler behavior [e89cf53](https://github.com/Sofie-Automation/sofie-chef/commit/e89cf538d24b119b606aa9a0c085a883c1b2c5c5)
+
+### Features
+
+* Update Electron to version 44 ( Chromium 152.0.7977.54)
+* **(EAV-499)** add allowedWebHIDDevices [d9ae9ac](https://github.com/Sofie-Automation/sofie-chef/commit/d9ae9ac4e2a13c2080b6e8ac840b654457af2311)
+
 ## [0.6.0](https://github.com/Sofie-Automation/sofie-chef/compare/v0.5.0...v0.6.0) (Thu Mar 05 2026)
 
 
