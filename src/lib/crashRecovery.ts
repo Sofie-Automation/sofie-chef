@@ -56,7 +56,7 @@ export class CrashRecovery {
 
 		if (
 			this.lastLoadTime > this.lastCrashTime && // The content has loaded successfully since the last crash
-			Date.now() - this.lastLoadTime > this.options.stableThreshold
+			Date.now() - this.lastLoadTime >= this.options.stableThreshold
 		) {
 			// The content had been stable for a while, so treat this as a new crash-loop:
 			this.crashCount = 0
@@ -64,9 +64,11 @@ export class CrashRecovery {
 		this.crashCount++
 		this.lastCrashTime = Date.now()
 
-		const delay =
-			Math.min(this.options.initialDelay * 2 ** (this.crashCount - 1), this.options.maxDelay) +
-			Math.floor(Math.random() * this.options.maxJitter)
+		const delay = Math.min(
+			(this.options.initialDelay * 2) ** (this.crashCount - 1) +
+				Math.floor(Math.random() * this.options.maxJitter),
+			this.options.maxDelay
+		)
 
 		this.callbacks.onRestartScheduled(delay, this.crashCount)
 		this.restartTimeout = setTimeout(() => {

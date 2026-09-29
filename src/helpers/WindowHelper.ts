@@ -93,7 +93,7 @@ export class WindowHelper extends EventEmitter {
 			this.emit('focus')
 		})
 		this.window.on('close', () => {
-			this.logger.info(`Window "${this.id}": closed`)
+			this.crashRecovery.cancelPending()
 			this.emit('closed')
 		})
 		this.window.on('unresponsive', () => {
