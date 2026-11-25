@@ -83,16 +83,16 @@
 			"extraFiles": []
 		},
 		"dmg": {
-			"artifactName": "SofieChef ${version} macOS Installer.${ext}"
+			"artifactName": "SofieChef-${version}-macOS-Installer.${ext}"
 		},
 		"nsis": {
-			"artifactName": "SofieChef ${version} Windows Installer.${ext}",
+			"artifactName": "SofieChef-${version}-Windows-Installer.${ext}",
 			"oneClick": false,
 			"perMachine": false,
 			"allowToChangeInstallationDirectory": true
 		},
 		"appImage": {
-			"artifactName": "SofieChef ${version} Linux Executable.${ext}"
+			"artifactName": "SofieChef-${version}-Linux-Executable.${ext}"
 		},
 		"snap": {
 			"publish": "github"
